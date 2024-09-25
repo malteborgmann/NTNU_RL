@@ -11,6 +11,9 @@ np.random.seed(20) # Numerical value that generates a new set or repeats pseudo-
 Number_of_Bandits = 4
 p_bandits = [0.5, 0.1, 0.8, 0.3] # Color: Blue, Orange, Green, Red #Note: I gave big values to only visualize better, in real machine chance is very slim
 
+epsilon = 0.5
+decay = 1 / 100
+
 def bandit_run(index):
     if np.random.rand() >= p_bandits[index]: #random  probability to win or lose per machine
         return -1 # Lose
@@ -36,7 +39,15 @@ def plot_rewards(rewards):
     plt.grid(axis='x', color='0.80')
     plt.legend(title='Parameter where:')
     plt.show()
-  
+
+def greedy(epsilon: float, bandit_wins_list: list, bandit_runs: list):
+    if len(bandit_wins_list) == len(bandit_runs):
+        avg = [bandit_wins_list[i] / bandit_runs[i] for i in range(len(bandit_wins_list))]
+        if np.random.rand() > epsilon: # return index of best bandit
+            print("Exploitation")
+            return np.argmax(avg)
+    print("Exploration")
+    return np.random.randint(0, len(p_bandits)) # return random bandit
 
 N = 1000 # number of steps for Thompson Sampling
 bandit_runing_count = [1] * Number_of_Bandits   # Array for Number of bandits try times, e.g. [1. 1, 1]
@@ -67,7 +78,9 @@ for step in range(1, N):
         prob_theta_samples.append(p.rvs(1)) #rvs method provides random samples of distibution
 
     # Select best bandit based on theta sample a bandit
-    select_bandit = np.argmax(prob_theta_samples)
+    # select_bandit = np.argmax(prob_theta_samples)
+    select_bandit = greedy(epsilon, bandit_win_count, bandit_runing_count) # --> bandit index
+    #epsilon -= decay # decrease epsilon for next run
 
     # Run bandit and update win count, loss count, and run count
     if(bandit_run(select_bandit) == 1):
