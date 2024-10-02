@@ -41,11 +41,10 @@ def plot_rewards(rewards):
     plt.show()
 
 def greedy(epsilon: float, bandit_wins_list: list, bandit_runs: list):
-    if len(bandit_wins_list) == len(bandit_runs):
-        avg = [bandit_wins_list[i] / bandit_runs[i] for i in range(len(bandit_wins_list))]
-        if np.random.rand() > epsilon: # return index of best bandit
-            print("Exploitation")
-            return np.argmax(avg)
+    avg = [bandit_wins_list[i] / bandit_runs[i] for i in range(len(bandit_wins_list))]
+    if np.random.rand() > epsilon: # return index of best bandit
+        print("Exploitation")
+        return np.argmax(avg)
     print("Exploration")
     return np.random.randint(0, len(p_bandits)) # return random bandit
 
