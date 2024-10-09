@@ -26,21 +26,24 @@ TransitionProbability = [ #[Left, Right]
 
 Value = [0, 0, 0, 0, 0, 0, 0, 0]  # Initial Value estimation of each state (we can set random too)
 gamma = 0.9 # discount factor
-delta = 0.001
-random_policy = [0] * 8 # left = 0, right = 1
+theta = 0.000001
 
-def evaluate_policy(value, policy) -> list[int]:
-    new_values = [0] * states
-    for state in range(states):
-        action = policy[state]
-        # v = 0
-        # for s in range(states):
-        #     v = v + TransitionProbability[state][s][action] * (Reward[s][action] + gamma * value[s])
-        v = sum([TransitionProbability[state][s][action] * (Reward[s][action] + gamma * value[s]) for s in range(states)])
-        new_values[state] = round(v, 5)
-    return new_values
+def evaluate_policy(value, policy, terminal) -> list:
+    while True:
+        delta = 0
+        for state in range(states):
+            action = policy[state]
+            v_old = value[state]
+            # for s in range(states):
+            #     v = v + TransitionProbability[state][s][action] * (Reward[s][action] + gamma * value[s])
+            value[state] = round(sum([TransitionProbability[state][s][action] * (Reward[s][action] + gamma * value[s]) for s in range(states)]), 5)
+            delta = max(delta, abs(v_old - value[state]))
+        if delta < theta:
+            print("Delta < Theta")
+            break
+    return value
 
-def improve_policy(value, policy):
+def improve_policy(value, policy) -> list:
     new_policy = [-1] * len(policy)
     for i, p in enumerate(policy):
         new_policy[i] = p
@@ -65,6 +68,17 @@ def improve_policy(value, policy):
 
     return new_policy
 
+def print_policy(policy, terminal, label = ""):
+    printable_policy = [-1] * len(policy)
+    for i in range(len(policy)):
+        printable_policy[i] = "l" if policy[i] == 0 and policy[i] != 'T' else "r"
+
+    for i, t in enumerate(terminal):
+        if t == 'T':
+            printable_policy[i] = t
+
+    print(label, printable_policy)
+
 # for iteration in range(0, 100):
 #     NewValue = [0, 0, 0, 0, 0, 0, 0, 0] # Values of each state after one iteration
 #     for i in range(states):
@@ -83,7 +97,7 @@ def improve_policy(value, policy):
 
 # Determine the policy (One time iteration)
 NewValue = [-1e10, -1e10, -1e10, -1e10, -1e10, -1e10, -1e10, -1e10]
-policy = ['NA','NA','NA','NA','NA', 'NA', 'NA', 'NA']
+policy = [1] * 8 # left = 0, right = 1
 Terminal = ['','','','T','', '', 'T', 'T']
 # for i in range(states):
 #     for a in range(actions):
@@ -96,34 +110,44 @@ Terminal = ['','','','T','', '', 'T', 'T']
 #                 NewValue[i] = max(NewValue[i], value_temp)
 #             else:
 #                 policy[i] = 'T'
+iteration = 0
+while True:
+    iteration += 1
+    print("")
+    print("--------------------------------")
+    print("Iteration:", iteration)
 
-for i in range(states):
-    print(i)
-    Value = evaluate_policy(Value, random_policy)
-    new_policy = improve_policy(Value, random_policy)
+
+    Value = evaluate_policy(Value, policy, Terminal)
+    print("Value: ", str(Value))
+
+    new_policy = improve_policy(Value, policy)
     policy_change = False
-    print("New Policy" + str(new_policy))
-    print("Old policy" + str(random_policy))
+
+    print_policy(policy, Terminal, "Old Policy: ")
+    print_policy(new_policy, Terminal, "New Policy: ")
+
     for j in range(len(new_policy)):
-        if random_policy[j] != new_policy[j]:
+        if policy[j] != new_policy[j]:
             policy_change = True
-    random_policy = new_policy
+    policy = new_policy
+
     if policy_change == False:
-        print("Stop")
+        print("Terminate - Policy has converged. Breaking the loop.")
         break
 
+print("--------------------------------")
+print("Final Value Estimation: ", end="")
+print(Value)
+print()
+print("The algoirthm's final policy is:", end="")
+print_policy(policy, Terminal)
+print("--------------------------------")
 
-print("Final Value Estimation:", Value)
 
-for i in range(len(random_policy)):
-    random_policy[i] = "l" if random_policy[i] == 0 and random_policy[i] != 'T' else "r"
-
-for i,t in enumerate(Terminal):
-    if t == 'T':
-        random_policy[i] = t
 
 #['l', 'r', 'l', 'T', 'r', 'l', 'T', 'T']
 #['l', 'r', 'l', 'T', 'r', 'l', 'T', 'T']
 
-print("The algoirthm's final policy is:", random_policy)
+
 
