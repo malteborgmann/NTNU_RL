@@ -28,8 +28,8 @@ Value = [0, 0, 0, 0, 0, 0, 0, 0]  # Initial Value estimation of each state (we c
 gamma = 0.9 # discount factor
 theta = 0.000001
 
-def evaluate_policy(value, policy, terminal) -> list:
-    while True:
+def evaluate_policy(value, policy, terminal, k) -> list:
+    for i in range(k):
         delta = 0
         for state in range(states):
             action = policy[state]
@@ -38,9 +38,6 @@ def evaluate_policy(value, policy, terminal) -> list:
             #     v = v + TransitionProbability[state][s][action] * (Reward[s][action] + gamma * value[s])
             value[state] = round(sum([TransitionProbability[state][s][action] * (Reward[s][action] + gamma * value[s]) for s in range(states)]), 5)
             delta = max(delta, abs(v_old - value[state]))
-        if delta < theta:
-            print("Delta < Theta")
-            break
     return value
 
 def improve_policy(value, policy) -> list:
@@ -79,38 +76,13 @@ def print_policy(policy, terminal, label = ""):
 
     print(label, printable_policy)
 
-# for iteration in range(0, 100):
-#     NewValue = [0, 0, 0, 0, 0, 0, 0, 0] # Values of each state after one iteration
-#     for i in range(states):
-#         for a in range(actions):
-#             value_temp = 0
-#             for j in range(states):
-#                 value_temp += TransitionProbability[i][j][a] * (Reward[j][a] + gamma * Value[j])
-#             NewValue[i] = round(max(NewValue[i], value_temp), 5)
-#     bellman_factor = 0
-#     for i in range(states):
-#         bellman_factor = max(bellman_factor, abs(Value[i]-NewValue[i]))
-#     Value = NewValue
-#     print(iteration, NewValue, 'bellman_factor (' + str(bellman_factor) + ')' , sep=",    ")
-#     if(bellman_factor < delta):
-#         break
 
 # Determine the policy (One time iteration)
 NewValue = [-1e10, -1e10, -1e10, -1e10, -1e10, -1e10, -1e10, -1e10]
 policy = [1] * 8 # left = 0, right = 1
 Terminal = ['','','','T','', '', 'T', 'T']
-# for i in range(states):
-#     for a in range(actions):
-#         value_temp = 0
-#         for j in range(states):
-#             value_temp += TransitionProbability[i][j][a] * (Reward[j][a] + gamma * Value[j])
-#         if(NewValue[i] < value_temp):
-#             if(Terminal[i] != 'T'):
-#                 policy[i] = A[a]
-#                 NewValue[i] = max(NewValue[i], value_temp)
-#             else:
-#                 policy[i] = 'T'
 iteration = 0
+k = 5
 while True:
     iteration += 1
     print("")
@@ -118,7 +90,7 @@ while True:
     print("Iteration:", iteration)
 
 
-    Value = evaluate_policy(Value, policy, Terminal)
+    Value = evaluate_policy(Value, policy, Terminal, k)
     print("Value: ", str(Value))
 
     new_policy = improve_policy(Value, policy)
@@ -144,3 +116,4 @@ print("The algoirthm's final policy is:", end="")
 print_policy(policy, Terminal)
 print("--------------------------------")
 
+# Wir erwarten: ['l', 'r', 'l', 'T', 'r', 'l', 'T', 'T']
